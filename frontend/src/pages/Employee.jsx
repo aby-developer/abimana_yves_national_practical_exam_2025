@@ -1,22 +1,6 @@
 import { useState, useEffect } from "react";
 import { getEmployees, createEmployee, getDepartments } from "../api/api";
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Eye,
-  UserPlus,
-  Filter,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  CheckCircle,
-  AlertCircle
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Search, Edit, Trash2, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Employee() {
@@ -92,11 +76,10 @@ export default function Employee() {
     setEditingEmployee(null);
   };
 
-  // CREATE/UPDATE EMPLOYEE
+  // CREATE EMPLOYEE
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!form.FirstName || !form.LastName || !form.Position) {
       toast.error("Please fill in all required fields");
       return;
@@ -105,13 +88,13 @@ export default function Employee() {
     setLoading(true);
     try {
       await createEmployee(form);
-      toast.success(editingEmployee ? "Employee updated successfully!" : "Employee added successfully!");
+      toast.success("Employee added successfully!");
       fetchEmployees();
       resetForm();
       setShowForm(false);
     } catch (err) {
       console.log(err);
-      toast.error(err.response?.data?.message || "Operation failed");
+      toast.error("Operation failed");
     } finally {
       setLoading(false);
     }
@@ -119,14 +102,9 @@ export default function Employee() {
 
   // DELETE EMPLOYEE
   const handleDelete = async (id, name) => {
-    if (window.confirm(`Are you sure you want to delete ${name}?`)) {
-      try {
-        // Add delete API call here
-        toast.success("Employee deleted successfully!");
-        fetchEmployees();
-      } catch (err) {
-        toast.error("Failed to delete employee");
-      }
+    if (window.confirm(`Delete ${name}?`)) {
+      toast.success("Employee deleted");
+      fetchEmployees();
     }
   };
 
@@ -134,8 +112,7 @@ export default function Employee() {
   const filteredEmployees = employees.filter(emp => 
     emp.FirstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.LastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.employeeNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.Position?.toLowerCase().includes(searchTerm.toLowerCase())
+    emp.employeeNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // PAGINATION
@@ -145,324 +122,188 @@ export default function Employee() {
     currentPage * itemsPerPage
   );
 
-  // STATISTICS
-  const stats = {
-    total: employees.length,
-    departments: departments.length,
-    male: employees.filter(e => e.Gender?.toLowerCase() === 'male').length,
-    female: employees.filter(e => e.Gender?.toLowerCase() === 'female').length,
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {/* Header */}
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent">
-            Employee Management
-          </h1>
-          <p className="text-gray-400 mt-1">Manage your workforce efficiently</p>
+          <h1 className="text-2xl font-bold text-white">Employees</h1>
+          <p className="text-gray-400 text-sm mt-1">Total: {employees.length} employees</p>
         </div>
         
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           onClick={() => {
             resetForm();
             setShowForm(!showForm);
           }}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-blue-500/20 transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition"
         >
-          <UserPlus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           {showForm ? "Cancel" : "Add Employee"}
-        </motion.button>
+        </button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: "Total Employees", value: stats.total, icon: Users, color: "blue" },
-          { label: "Departments", value: stats.departments, icon: Filter, color: "purple" },
-          { label: "Male Employees", value: stats.male, icon: Users, color: "green" },
-          { label: "Female Employees", value: stats.female, icon: Users, color: "pink" },
-        ].map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="glass-card p-5"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">{stat.label}</p>
-                <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
-              </div>
-              <div className={`p-3 rounded-xl bg-${stat.color}-500/20 border border-${stat.color}-500/30`}>
-                <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
-              </div>
+      {/* Add Employee Form */}
+      {showForm && (
+        <div className="bg-white/5 border border-white/10 rounded-lg p-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <input
+                name="employeeNumber"
+                placeholder="Employee Number"
+                onChange={handleChange}
+                value={form.employeeNumber}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              />
+              <input
+                name="FirstName"
+                placeholder="First Name *"
+                onChange={handleChange}
+                value={form.FirstName}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              />
+              <input
+                name="LastName"
+                placeholder="Last Name *"
+                onChange={handleChange}
+                value={form.LastName}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              />
+              <input
+                name="Position"
+                placeholder="Position *"
+                onChange={handleChange}
+                value={form.Position}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              />
+              <input
+                name="Address"
+                placeholder="Address"
+                onChange={handleChange}
+                value={form.Address}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              />
+              <input
+                name="Telephone"
+                placeholder="Telephone"
+                onChange={handleChange}
+                value={form.Telephone}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              />
+              <select
+                name="Gender"
+                onChange={handleChange}
+                value={form.Gender}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+              <input
+                name="hiredDate"
+                type="date"
+                onChange={handleChange}
+                value={form.hiredDate}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:border-blue-500"
+              />
+              <select
+                name="Department"
+                onChange={handleChange}
+                value={form.Department}
+                className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept._id} value={dept._id}>
+                    {dept.DepartmentName}
+                  </option>
+                ))}
+              </select>
             </div>
-          </motion.div>
-        ))}
-      </div>
 
-      {/* Add/Edit Employee Form */}
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-white">
-                  {editingEmployee ? "Edit Employee" : "Add New Employee"}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <input
-                  name="employeeNumber"
-                  placeholder="Employee Number *"
-                  onChange={handleChange}
-                  value={form.employeeNumber}
-                  className="input-modern"
-                  required
-                />
-                <input
-                  name="FirstName"
-                  placeholder="First Name *"
-                  onChange={handleChange}
-                  value={form.FirstName}
-                  className="input-modern"
-                  required
-                />
-                <input
-                  name="LastName"
-                  placeholder="Last Name *"
-                  onChange={handleChange}
-                  value={form.LastName}
-                  className="input-modern"
-                  required
-                />
-                <input
-                  name="Position"
-                  placeholder="Position *"
-                  onChange={handleChange}
-                  value={form.Position}
-                  className="input-modern"
-                  required
-                />
-                <input
-                  name="Address"
-                  placeholder="Address"
-                  onChange={handleChange}
-                  value={form.Address}
-                  className="input-modern"
-                />
-                <input
-                  name="Telephone"
-                  placeholder="Telephone"
-                  onChange={handleChange}
-                  value={form.Telephone}
-                  className="input-modern"
-                  type="tel"
-                />
-                
-                <select
-                  name="Gender"
-                  onChange={handleChange}
-                  value={form.Gender}
-                  className="input-modern"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-
-                <input
-                  name="hiredDate"
-                  type="date"
-                  onChange={handleChange}
-                  value={form.hiredDate}
-                  className="input-modern"
-                />
-
-                <select
-                  name="Department"
-                  onChange={handleChange}
-                  value={form.Department}
-                  className="input-modern md:col-span-2 lg:col-span-1"
-                  required
-                >
-                  <option value="">Select Department *</option>
-                  {departments.map((dept) => (
-                    <option key={dept._id} value={dept._id}>
-                      {dept.DepartmentName} ({dept.DepartmentCode})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 btn-primary"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Processing...
-                    </span>
-                  ) : (
-                    editingEmployee ? "Update Employee" : "Add Employee"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-6 py-2 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors"
-                >
-                  Reset
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search employees..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-modern pl-10"
-          />
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium disabled:opacity-50"
+              >
+                {loading ? "Adding..." : "Add Employee"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg"
+              >
+                Clear
+              </button>
+            </div>
+          </form>
         </div>
-        
-        <div className="flex gap-2">
-          <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-            <Filter className="w-5 h-5" />
-          </button>
-          <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-            <Download className="w-5 h-5" />
-          </button>
-        </div>
+      )}
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search employees..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full max-w-md pl-10 pr-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+        />
       </div>
 
       {/* Employees Table */}
-      <div className="glass-card overflow-hidden">
+      <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="table-modern">
-            <thead>
-              <tr>
-                <th>No.</th>
-                <th>Employee Name</th>
-                <th>Position</th>
-                <th>Department</th>
-                <th>Phone</th>
-                <th>Gender</th>
-                <th>Hired Date</th>
-                <th>Actions</th>
+          <table className="w-full text-sm">
+            <thead className="bg-white/5 border-b border-white/10">
+              <tr className="text-left text-gray-400">
+                <th className="p-3">#</th>
+                <th className="p-3">Name</th>
+                <th className="p-3">Position</th>
+                <th className="p-3">Department</th>
+                <th className="p-3">Phone</th>
+                <th className="p-3">Gender</th>
+                
               </tr>
             </thead>
             <tbody>
               {loading && employees.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-12">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                      <p className="text-gray-400">Loading employees...</p>
-                    </div>
+                  <td colSpan="7" className="text-center py-8 text-gray-400">
+                    Loading...
                   </td>
                 </tr>
               ) : paginatedEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-12">
-                    <div className="flex flex-col items-center gap-2">
-                      <Users className="w-12 h-12 text-gray-600" />
-                      <p className="text-gray-400">No employees found</p>
-                      <button
-                        onClick={() => setShowForm(true)}
-                        className="mt-2 text-blue-400 hover:text-blue-300"
-                      >
-                        Add your first employee
-                      </button>
-                    </div>
+                  <td colSpan="7" className="text-center py-8 text-gray-400">
+                    No employees found
                   </td>
                 </tr>
               ) : (
                 paginatedEmployees.map((emp, index) => (
-                  <motion.tr
-                    key={emp._id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <td className="font-medium">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td>
+                  <tr key={emp._id} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="p-3">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                    <td className="p-3">
                       <div>
                         <p className="font-medium">{emp.FirstName} {emp.LastName}</p>
                         <p className="text-xs text-gray-400">ID: {emp.employeeNumber}</p>
                       </div>
                     </td>
-                    <td>
-                      <span className="badge-info">
-                        {emp.Position}
+                    <td className="p-3">{emp.Position}</td>
+                    <td className="p-3">{emp.departments?.DepartmentCode || "-"}</td>
+                    <td className="p-3">{emp.Telephone || "-"}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        emp.Gender === 'Male' ? 'bg-blue-500/20 text-blue-300' : 'bg-pink-500/20 text-pink-300'
+                      }`}>
+                        {emp.Gender || "-"}
                       </span>
                     </td>
-                    <td>{emp.Department?.DepartmentName || "N/A"}</td>
-                    <td>{emp.Telephone || "-"}</td>
-                    <td>
-                      <span className={`badge ${emp.Gender?.toLowerCase() === 'male' ? 'badge-info' : 'badge-success'}`}>
-                        {emp.Gender || "N/A"}
-                      </span>
-                    </td>
-                    <td>{emp.hiredDate ? new Date(emp.hiredDate).toLocaleDateString() : "-"}</td>
-                    <td>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setForm(emp);
-                            setEditingEmployee(emp);
-                            setShowForm(true);
-                          }}
-                          className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        {/* <button
-                          onClick={() => handleDelete(emp._id, `${emp.FirstName} ${emp.LastName}`)}
-                          className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button> */}
-                        <button
-                          className="p-1.5 rounded-lg bg-gray-500/20 text-gray-400 hover:bg-gray-500/30 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
+                    
+                  </tr>
                 ))
               )}
             </tbody>
@@ -471,52 +312,24 @@ export default function Employee() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between gap-4 p-4 border-t border-white/10">
+          <div className="flex justify-between items-center p-4 border-t border-white/10">
             <p className="text-sm text-gray-400">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} entries
+              Page {currentPage} of {totalPages}
             </p>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                onClick={() => setCurrentPage(p => p - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ChevronLeft className="w-5 h-5" />
+                Previous
               </button>
-              <div className="flex gap-1">
-                {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`w-10 h-10 rounded-lg transition-colors ${
-                        currentPage === pageNum
-                          ? "bg-blue-600 text-white"
-                          : "bg-white/5 border border-white/10 hover:bg-white/10"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
               <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => setCurrentPage(p => p + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ChevronRight className="w-5 h-5" />
+                Next
               </button>
             </div>
           </div>
